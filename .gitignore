@@ -1,1 +1,8 @@
+__pycache__/
+.venv/
+venv/
+*.pyc
+*.pyo
+*.log
 private_doc/
+instance/

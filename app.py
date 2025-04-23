@@ -1,50 +1,25 @@
 from flask import Flask, request, jsonify
-import json
 
 app = Flask(__name__)
 
-REQUIRED_FIELDS = ['metric_name', 'value', 'timestamp']
-
-
-def validate_mcp_data(data):
-    """Validates the incoming MCP data.
-
-    Args:
-        data (dict): The MCP data to validate.
-
-    Returns:
-        tuple: A tuple containing a boolean indicating whether the data is valid,
-               and an error message if the data is invalid (None otherwise).
-    """
-    if not isinstance(data, dict):
-        return False, "Data must be a JSON object"
-
-    for field in REQUIRED_FIELDS:
-        if field not in data:
-            return False, f"Missing required field: {field}"
-
-    return True, None
-
-
-@app.route('/', methods=['POST'])
-def receive_data():
-    """Receives data from k6, validates it, and prints it.
-    """
+@app.route('/mcp', methods=['POST'])
+def handle_mcp_data():
     try:
         data = request.get_json()
+        # Simulate processing the MCP data - replace with actual processing logic
+        if not isinstance(data, dict):
+            raise ValueError("Invalid MCP data format: Data must be a JSON object.")
 
-        is_valid, error_message = validate_mcp_data(data)
+        # Placeholder for actual data processing
+        print("Received MCP data:", data)
 
-        if not is_valid:
-            return jsonify({"error": error_message}), 400  # Bad Request
+        return jsonify({'message': 'MCP data received successfully'}), 200
 
-        print("Received valid data:", data)
-        return jsonify({"message": "Data received successfully"}), 200  # OK
-
+    except ValueError as ve:
+        return jsonify({'error': str(ve)}), 400
     except Exception as e:
-        print(f"Error processing data: {e}")
-        return jsonify({"error": str(e)}), 500  # Internal Server Error
-
+        print(f"Error: {e}")
+        return jsonify({'error': 'Internal Server Error'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

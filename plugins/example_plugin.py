@@ -1,10 +1,12 @@
-# plugins/example_plugin.py
+from plugin_interface import MCPPlugin
 
-def init_plugin(app):
-    '''Initializes the plugin within the Flask app context'''
-    print('Example plugin initialized!')
-
-    # Example route added by the plugin
-    @app.route('/plugin_route')
-    def plugin_route():
-        return 'This route is served by the example plugin!'
+class ExamplePlugin(MCPPlugin):
+    def process_data(self, data: dict):
+        print(f"Example plugin received data: {data}")
+        # Perform some action on the data
+        # For example, extract some values and log them
+        try:
+            value = data['value']
+            print(f"Extracted value: {value}")
+        except KeyError:
+            print("Value key not found in data.")

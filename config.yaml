@@ -1,0 +1,9 @@
+# Configuration for k6-mcp-server
+
+server:
+  host: 0.0.0.0
+  port: 5000
+
+plugins:
+  plugin_paths:
+    - "plugins/"

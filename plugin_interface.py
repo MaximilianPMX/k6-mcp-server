@@ -1,11 +1,6 @@
 from abc import ABC, abstractmethod
 
-class MCPPlugin(ABC):
+class PluginInterface(ABC):
     @abstractmethod
-    def process_data(self, data: dict):
-        """Processes the MCP data.
-
-        Args:
-            data (dict): The MCP data to process.
-        """
+    def process_data(self, data):
         pass

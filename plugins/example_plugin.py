@@ -1,12 +1,18 @@
-from plugin_interface import MCPPlugin
+import logging
+from plugin_interface import PluginInterface
 
-class ExamplePlugin(MCPPlugin):
-    def process_data(self, data: dict):
-        print(f"Example plugin received data: {data}")
-        # Perform some action on the data
-        # For example, extract some values and log them
+logger = logging.getLogger(__name__)
+
+class ExamplePlugin(PluginInterface):
+    def __init__(self):
+        logger.info("ExamplePlugin initialized")
+
+    def process_data(self, data):
         try:
-            value = data['value']
-            print(f"Extracted value: {value}")
-        except KeyError:
-            print("Value key not found in data.")
+            logger.info(f"ExamplePlugin processing data: {data}")
+            # Simulate some processing of the data
+            processed_data = f"Processed: {data['data']}"
+            logger.debug(f"Data processed: {processed_data}")  # Log processed data
+
+        except Exception as e:
+            logger.error(f"Error processing data in ExamplePlugin: {e}", exc_info=True)

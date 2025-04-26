@@ -1,43 +1,61 @@
-from flask import Flask, request, jsonify
-import json
-import importlib
-import os
-import plugin_interface  # Import the plugin_interface
+import logging
+import time
+import threading
+from plugin_interface import PluginInterface # Assuming you have this
 
-app = Flask(__name__)
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-# Load plugins from the 'plugins' directory
-plugins = []
-plugin_directory = 'plugins'
-for filename in os.listdir(plugin_directory):
-    if filename.endswith('_plugin.py'):
-        module_name = filename[:-3]
+# Placeholder for actual MCP server and events processor
+class MCPServer:
+    def __init__(self):
+        self.plugins = []
+
+    def load_plugin(self, plugin):
         try:
-            module = importlib.import_module(f'{plugin_directory}.{module_name}')
-            # Instantiate the plugin if it has a class named Plugin
-            if hasattr(module, 'Plugin'):
-                plugin_instance = module.Plugin()
-                plugins.append(plugin_instance)
-                print(f'Loaded plugin: {module_name}')
+            if isinstance(plugin, PluginInterface):
+                self.plugins.append(plugin)
+                logger.info(f'Plugin {plugin.__class__.__name__} loaded successfully.')
             else:
-                print(f'Skipped loading {module_name}: No Plugin class found')
+                logger.warning(f'Attempted to load invalid plugin: {plugin}')
         except Exception as e:
-            print(f'Error loading plugin {module_name}: {e}')
+            logger.error(f'Error loading plugin: {e}', exc_info=True)
 
-
-@app.route('/mcp', methods=['POST'])
-def mcp_endpoint():
-    data = request.get_json()
-    print(f'Received data: {json.dumps(data)}')
-
-    # Process data with each loaded plugin
-    for plugin in plugins:
+    def process_event(self, event_data):
+        logger.debug(f'Received event: {event_data}')  # Log received events
         try:
-            plugin.process_data(data)
+            for plugin in self.plugins:
+                plugin.process_data(event_data)
         except Exception as e:
-            print(f'Error processing data with plugin {plugin.__class__.__name__}: {e}')
+            logger.error(f'Error processing event with plugin: {e}', exc_info=True)
 
-    return jsonify({'status': 'success', 'message': 'Data processed by plugins'}), 200
+    def run(self):
+      logger.info("MCP Server started")
+      while True:
+        # Simulate receiving data
+        event_data = {"timestamp": time.time(), "data": "Example data"}
+        self.process_event(event_data)
+        time.sleep(2) # Simulate an event every 2 seconds
 
+# Example Usage
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    mcp_server = MCPServer()
+
+    # Load plugins dynamically (Example)
+    try:
+        from plugins.example_plugin import ExamplePlugin
+        example_plugin = ExamplePlugin()
+        mcp_server.load_plugin(example_plugin)
+
+        from plugins.file_logger_plugin import FileLoggerPlugin
+        file_logger_plugin = FileLoggerPlugin("output.log")
+        mcp_server.load_plugin(file_logger_plugin)
+
+
+    except ImportError as e:
+        logger.error(f'Error importing plugin module: {e}', exc_info=True)
+    except Exception as e:
+        logger.error(f'Error instantiating or loading plugin: {e}', exc_info=True)
+
+    mcp_server.run()

@@ -1,40 +1,43 @@
-import os
+from flask import Flask, request, jsonify
+import json
 import importlib
-
-from flask import Flask
+import os
+import plugin_interface  # Import the plugin_interface
 
 app = Flask(__name__)
 
-PLUGIN_DIR = 'plugins'
-
-
-def load_plugins():
-    '''Loads plugins from the plugins directory.'''
-    plugin_count = 0
-    for filename in os.listdir(PLUGIN_DIR):
-        if filename.endswith('.py'):
-            module_name = filename[:-3]
-            try:
-                module = importlib.import_module(f'{PLUGIN_DIR}.{module_name}')
+# Load plugins from the 'plugins' directory
+plugins = []
+plugin_directory = 'plugins'
+for filename in os.listdir(plugin_directory):
+    if filename.endswith('_plugin.py'):
+        module_name = filename[:-3]
+        try:
+            module = importlib.import_module(f'{plugin_directory}.{module_name}')
+            # Instantiate the plugin if it has a class named Plugin
+            if hasattr(module, 'Plugin'):
+                plugin_instance = module.Plugin()
+                plugins.append(plugin_instance)
                 print(f'Loaded plugin: {module_name}')
-                # Optionally, call an initialization function in the plugin
-                if hasattr(module, 'init_plugin'):
-                    module.init_plugin(app)
-                plugin_count += 1
-            except Exception as e:
-                print(f'Error loading plugin {module_name}: {e}')
-    print(f'Total plugins loaded: {plugin_count}')
-    return plugin_count
+            else:
+                print(f'Skipped loading {module_name}: No Plugin class found')
+        except Exception as e:
+            print(f'Error loading plugin {module_name}: {e}')
 
-@app.route('/')
-def hello_world():
-    return 'Hello, World!'
 
+@app.route('/mcp', methods=['POST'])
+def mcp_endpoint():
+    data = request.get_json()
+    print(f'Received data: {json.dumps(data)}')
+
+    # Process data with each loaded plugin
+    for plugin in plugins:
+        try:
+            plugin.process_data(data)
+        except Exception as e:
+            print(f'Error processing data with plugin {plugin.__class__.__name__}: {e}')
+
+    return jsonify({'status': 'success', 'message': 'Data processed by plugins'}), 200
 
 if __name__ == '__main__':
-    # Create the plugins directory if it does not exist
-    if not os.path.exists(PLUGIN_DIR):
-        os.makedirs(PLUGIN_DIR)
-    
-    load_plugins()
-    app.run(debug=True)
+    app.run(debug=True, port=5000)

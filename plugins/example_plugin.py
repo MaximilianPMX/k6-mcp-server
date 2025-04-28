@@ -1,18 +1,33 @@
+import asyncio
 import logging
-from plugin_interface import PluginInterface
 
-logger = logging.getLogger(__name__)
 
-class ExamplePlugin(PluginInterface):
-    def __init__(self):
-        logger.info("ExamplePlugin initialized")
+class Plugin:
+    """Example plugin to demonstrate plugin structure."""
 
-    def process_data(self, data):
-        try:
-            logger.info(f"ExamplePlugin processing data: {data}")
-            # Simulate some processing of the data
-            processed_data = f"Processed: {data['data']}"
-            logger.debug(f"Data processed: {processed_data}")  # Log processed data
+    def __init__(self, logger):
+        """Initializes the plugin with a logger.
 
-        except Exception as e:
-            logger.error(f"Error processing data in ExamplePlugin: {e}", exc_info=True)
+        Args:
+            logger (logging.Logger): The logger instance for logging messages.
+        """
+        self.logger = logger
+        self.name = 'Example Plugin'
+
+    async def load(self):
+        """Loads the plugin.  Placeholder for plugin initialization logic."""
+        self.logger.info(f'{self.name} loading...')
+
+    async def process(self, data):
+        """Processes incoming data.
+
+        Args:
+            data (dict): The data to process.
+        """
+        self.logger.info(f'{self.name} processing data: {data}')
+        await asyncio.sleep(1)
+        self.logger.info(f'{self.name} finished processing data.')
+
+    async def unload(self):
+        """Unloads the plugin. Placeholder for plugin cleanup logic."""
+        self.logger.info(f'{self.name} unloading...')

@@ -1,20 +1,39 @@
+import asyncio
+import json
 import logging
-from plugin_interface import PluginInterface
 
-logger = logging.getLogger(__name__)
 
-class FileLoggerPlugin(PluginInterface):
-    def __init__(self, filename):
-        self.filename = filename
-        self.file_handler = logging.FileHandler(filename)
-        self.file_handler.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        self.file_handler.setFormatter(formatter)
-        logger.addHandler(self.file_handler)
-        logger.info(f"FileLoggerPlugin initialized, logging to {filename}")
+class Plugin:
+    """Plugin for logging data to a file."""
 
-    def process_data(self, data):
+    def __init__(self, logger):
+        """Initializes the plugin with a logger.
+
+        Args:
+            logger (logging.Logger): The logger instance for logging messages.
+        """
+        self.logger = logger
+        self.name = 'File Logger Plugin'
+        self.file_path = 'k6_data.log'
+
+    async def load(self):
+        """Loads the plugin.  Placeholder for plugin initialization logic."""
+        self.logger.info(f'{self.name} loading...')
+
+    async def process(self, data):
+        """Processes incoming data by writing it to a file.
+
+        Args:
+            data (dict): The data to process.
+        """
         try:
-            logger.info(f"FileLoggerPlugin processing data: {data}")
+            with open(self.file_path, 'a') as f:
+                f.write(json.dumps(data) + '\n')
+            self.logger.info(f'{self.name} logged data to {self.file_path}')
         except Exception as e:
-            logger.error(f"Error processing data in FileLoggerPlugin: {e}", exc_info=True)
+            self.logger.error(f'Error writing to file: {e}')
+        await asyncio.sleep(0.1)
+
+    async def unload(self):
+        """Unloads the plugin. Placeholder for plugin cleanup logic."""
+        self.logger.info(f'{self.name} unloading...')
